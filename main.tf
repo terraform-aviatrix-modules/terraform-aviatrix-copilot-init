@@ -48,6 +48,9 @@ resource "terracurl_request" "add_copilot_service_account" {
 
   timeout = 300
 
+  max_retry      = 5
+  retry_interval = 1
+
   destroy_url    = var.destroy_url
   destroy_method = "GET"
 
