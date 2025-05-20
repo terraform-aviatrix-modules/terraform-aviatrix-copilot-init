@@ -1,5 +1,8 @@
 # terraform-aviatrix-copilot-init - release notes
 
+## v1.0.6
+- Add retries on Copilot service account creation, to deal with controller in upgrade state.
+
 ## v1.0.5
 - Use dummy URL for destroy terracurl requests (was causing issue with example.com)
 

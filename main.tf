@@ -46,7 +46,9 @@ resource "terracurl_request" "add_copilot_service_account" {
     200,
   ]
 
-  timeout = 300
+  max_retry      = 60 #Retry for 10 minutes during upgrade/maintenance
+  retry_interval = 10
+  timeout        = 300
 
   destroy_url    = var.destroy_url
   destroy_method = "GET"
@@ -65,6 +67,34 @@ resource "terracurl_request" "add_copilot_service_account" {
   ]
 }
 
+data "http" "controller_login_service_account" {
+  url      = "https://${var.controller_public_ip}/v2/api"
+  insecure = true
+  method   = "POST"
+  request_headers = {
+    "Content-Type" = "application/json"
+  }
+  request_body = jsonencode({
+    action   = "login",
+    username = var.copilot_service_account_username,
+    password = var.copilot_service_account_password,
+  })
+  retry {
+    attempts     = 30
+    min_delay_ms = 10000
+  }
+  lifecycle {
+    postcondition {
+      condition     = jsondecode(self.response_body)["return"]
+      error_message = "Failed to login to the controller: ${jsondecode(self.response_body)["reason"]}"
+    }
+  }
+
+  depends_on = [
+    terracurl_request.add_copilot_service_account
+  ]
+}
+
 #Add copilot service account
 resource "terracurl_request" "enable_copilot_association" {
   name            = "associate_copilot"
@@ -73,7 +103,7 @@ resource "terracurl_request" "enable_copilot_association" {
   skip_tls_verify = true
   request_body = jsonencode({
     action     = "associate_copilot",
-    CID        = local.controller_cid,
+    CID        = jsondecode(data.http.controller_login_service_account.response_body)["CID"]
     operation  = "enable",
     copilot_ip = var.copilot_public_ip,
   })
@@ -209,7 +239,7 @@ resource "terracurl_request" "copilot_init_simple" {
 
   headers = {
     Content-Type = "application/json",
-    CID          = local.controller_cid
+    CID          = jsondecode(data.http.controller_login_service_account.response_body)["CID"]
   }
 
   response_codes = [
