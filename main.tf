@@ -29,6 +29,7 @@ resource "terracurl_request" "add_copilot_service_account" {
   url             = "https://${var.controller_public_ip}/v2/api"
   method          = "POST"
   skip_tls_verify = true
+  ca_cert_file = ""
   request_body = jsonencode({
     action   = "add_account_user",
     CID      = local.controller_cid,
@@ -101,6 +102,7 @@ resource "terracurl_request" "enable_copilot_association" {
   url             = "https://${var.controller_public_ip}/v2/api"
   method          = "POST"
   skip_tls_verify = true
+  ca_cert_file = ""
   request_body = jsonencode({
     action     = "associate_copilot",
     CID        = jsondecode(data.http.controller_login_service_account.response_body)["CID"]
@@ -143,6 +145,7 @@ resource "terracurl_request" "configure_syslog" {
   url             = "https://${var.controller_public_ip}/v2/api"
   method          = "POST"
   skip_tls_verify = true
+  ca_cert_file = ""
   request_body = jsonencode({
     action   = "enable_remote_syslog_logging",
     CID      = local.controller_cid,
@@ -188,6 +191,7 @@ resource "terracurl_request" "configure_netflow" {
   url             = "https://${var.controller_public_ip}/v2/api"
   method          = "POST"
   skip_tls_verify = true
+  ca_cert_file = ""
   request_body = jsonencode({
     action    = "enable_netflow_agent",
     CID       = local.controller_cid,
@@ -230,6 +234,7 @@ resource "terracurl_request" "copilot_init_simple" {
   url             = "https://${var.copilot_public_ip}/v1/api/single-node"
   method          = "POST"
   skip_tls_verify = true
+  ca_cert_file = ""
   request_body = jsonencode({
     taskserver = {
       username = var.copilot_service_account_username,
